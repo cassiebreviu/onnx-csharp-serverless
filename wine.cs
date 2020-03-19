@@ -16,9 +16,9 @@ using System.Collections.Generic;
 
 namespace WineNlp.Function
 {
-    public static class price
+    public static class wine
     {
-        [FunctionName("price")]
+        [FunctionName("wine")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
@@ -27,7 +27,6 @@ namespace WineNlp.Function
 
             string name = req.Query["name"];
 
-            //parse input
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             name = name ?? data?.name;
@@ -35,7 +34,7 @@ namespace WineNlp.Function
             //get from model path
             //TODO: update from storage
             //string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
-            var modelPath = @"C:\Code\onnx-csharp-serverless\pipeline_price.onnx";
+            var modelPath = @"C:\Code\onnx-csharp-serverless\pipeline_variety.onnx";
 
             // create tensor of string and shape
             var inputTensor = new DenseTensor<string>(new string[] { name }, new int[] { 1, 1 });
@@ -61,11 +60,9 @@ namespace WineNlp.Function
                 sb.AppendLine($"Value: {r.AsTensor<float>().GetArrayString()}");
             }
 
-
             string responseMessage = string.IsNullOrEmpty(name)
                 ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
                 : $"Hello, {name}. This HTTP triggered function executed successfully.";
-
 
             return new OkObjectResult(responseMessage);
         }
