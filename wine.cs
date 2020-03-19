@@ -33,6 +33,7 @@ namespace WineNlp.Function
 
             //get from model path
             //TODO: update from storage
+            //TODO: add all models types here
             //string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
             var modelPath = @"C:\Code\onnx-csharp-serverless\pipeline_variety.onnx";
 
@@ -49,16 +50,16 @@ namespace WineNlp.Function
             //List<string> outputNames = new List<string>(session.InputMetadata.Keys);
 
             var result = session.Run(input);
-            // blah.Current.AsTensor
-            var sb = new StringBuilder();
-            sb.AppendLine("Scores:");
-            // dump the results
-            foreach (var r in result)
-            {
-                Console.WriteLine(r);
-                sb.AppendLine($"Name: { r.Name}");
-                sb.AppendLine($"Value: {r.AsTensor<float>().GetArrayString()}");
-            }
+
+            // var sb = new StringBuilder();
+            // sb.AppendLine("Scores:");
+            // // dump the results
+            // foreach (var r in result)
+            // {
+            //     Console.WriteLine(r);
+            //     sb.AppendLine($"Name: { r.Name}");
+            //     sb.AppendLine($"Value: {r.AsTensor<float>().GetArrayString()}");
+            // }
 
             string responseMessage = string.IsNullOrEmpty(name)
                 ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."

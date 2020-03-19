@@ -50,16 +50,15 @@ namespace WineNlp.Function
             //List<string> outputNames = new List<string>(session.InputMetadata.Keys);
 
             var result = session.Run(input);
-            // blah.Current.AsTensor
-            var sb = new StringBuilder();
-            sb.AppendLine("Scores:");
-            // dump the results
-            foreach (var r in result)
-            {
-                Console.WriteLine(r);
-                sb.AppendLine($"Name: { r.Name}");
-                sb.AppendLine($"Value: {r.AsTensor<float>().GetArrayString()}");
-            }
+            // var sb = new StringBuilder();
+            // sb.AppendLine("Scores:");
+            // // dump the results
+            // foreach (var r in result)
+            // {
+            //     Console.WriteLine(r);
+            //     sb.AppendLine($"Name: { r.Name}");
+            //     sb.AppendLine($"Value: {r.AsTensor<float>().GetArrayString()}");
+            // }
 
 
             string responseMessage = string.IsNullOrEmpty(name)
