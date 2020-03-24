@@ -50,6 +50,7 @@ namespace WineNlp.Function
             //List<string> outputNames = new List<string>(session.InputMetadata.Keys);
 
             var result = session.Run(input);
+            var stringResult = result.First();
 
             // var sb = new StringBuilder();
             // sb.AppendLine("Scores:");
@@ -65,7 +66,7 @@ namespace WineNlp.Function
                 ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
                 : $"Hello, {name}. This HTTP triggered function executed successfully.";
 
-            return new OkObjectResult(responseMessage);
+            return new OkObjectResult(stringResult);
         }
     }
 }
