@@ -5,7 +5,7 @@ Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! Th
 ### Prerquesites
 
 - [AML Azure Resource]() with a Notebook VM instance created
-  - If you prefer to create the model locally I recommend downloading [Anaconda]()
+  - If you prefer to create the model locally I recommend downloading [Anaconda](). However, this tutorial is written as if you are using AML.
 - [VS Code]() with [Azure Functions extension]()
 - [.NET core 3.1](https://dotnet.microsoft.com/download)
 
@@ -15,41 +15,68 @@ Thanks for asking! ONNX is an open/common file format to enable you to use model
 
 Build models in the Tensorflow, Keras, PyTorch, scikit-learn, CoreML, and other popular supported formats can be converted to the standard ONNX format, providing framework interoperability and helping to maximize the reach of hardware optimization.
 
-### Why you should use it?
+### Why should you use it?
 
 You are full of great questions. The answer is simple: it gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in C#! Say whaaat? Yes, that is right. Save it to ONNX format then run it in csharp with the onnxruntime!
 
 ## Create the Model
 
-I have set this up to give you **two options**. The _first option_ is to use the model from the previous blog post to classify wine. The _second option_ is to skip to update your existing code to export the model in ONNX format.
+I have a model from the previous blog post to classify wine quality that we will use as the example model. See the note below if you have your own model you would like to use. Additionaly, you should already have an Azure Machine Learning (AML) Studio created with a Compute resource. If not, follow [these steps]() to create one.
 
-### Option 1: To Use the Wine Model Code Provided
+> [!NOTE]
+> To use your own model visit the [ONNX Github tutorials](https://github.com/onnx/tutorials#converting-to-onnx-format) to see how to convert different frameworks and tools.
 
-- Clone Jupyter Notebook to Create the Model
+#### 1. Get Notebook
+
+- Open JupyterLab for the compute instance in AML
+- Click the Terminal to open a terminal tab
+- Clone the github repo
 
 ```shell
-git clone REPO HERE
+git clone https://github.com/cassieview/onnx-csharp-serverless.git
 ```
 
-- Run the code to get the model
-     <!--TODO finish writing steps here-->
-  > [!NOTE]
-  > There are different package depending on what library you used to create the model. Since we use scikit learn we will use the skl2onnx package to export our trained model
+- The `onnx-csharp-serverless` folder will appear. Navigate to the Jupyter Notebook `onnx-csharp-serverless/notebook/wine-nlp-onnx.ipynb`.
 
--pip install skl2onnx
--restart kernel
--import packages
+#### 2. Install the package
 
-```# Convert into ONNX format
+ONNX has different packages for python conversion to the ONNX format. Since we used SciKit Learn we will use the `skl2onnx` package to export our trained model
+
+- In the terminal install the package with the following command
+
+```python
+pip install skl2onnx
+```
+
+#### 3. Run the code
+
+The NLP notebook provided goes over how to create a basic bag-of-words style NLP model. Run each cell until you get to the `Export the Model` step near the bottom of the notebook.
+
+The first cell in the export block of the notebook is importing the ONNX packages.
+
+```python
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
 ```
 
-### Option 2: To Use Your Own Model
+The next cell is running `convert_sklearn` and sending in the the following values:
 
-To use your own model there are a few things to consider. You will need to update the export code based on your model. I will go over a few different ways to export the model. Hopefully your model will fall into one of the categories provided.
+- The first parameter is a trained classifier or pipeline. In our example we are using a pipeline with 2 steps to vectorize and classify the text.
+- The second parameter is a string name value of your choice.
+- Lastly setting the `initial_types` This is a list with each list item a tuple of a variable name and a type.
 
-<!--TODO finish writing steps here, include samples for different types of models to export to onnx-->
+```python
+model_onnx = convert_sklearn(pipeline,
+                             "quality",
+                             initial_types=[("input", StringTensorType([None, 1]))])
+```
+
+Lastly we will simply export the model.
+
+```python
+with open("pipeline_quality.onnx", "wb") as f:
+    f.write(model_onnx.SerializeToString())
+```
 
 ## Save Model to Azure Storage
 
@@ -98,3 +125,4 @@ using System.Numerics.Tensors;
 [Onnx CSharp API Docs](https://github.com/microsoft/onnxruntime/blob/master/docs/CSharp_API.md)
 [Scikit learn pipeline onnx](http://onnx.ai/sklearn-onnx/auto_examples/plot_tfidfvectorizer.html#l-example-tfidfvectorizer)
 [](https://github.com/Microsoft/onnxruntime)
+""""""""''''''''
