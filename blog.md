@@ -1,13 +1,13 @@
 # ONNX: No, it's not a Pokemon! Deploy your ONNX model with C# and Azure Functions
 
-Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! There are many ways to opperationalize your model. In this tutorial we are going to be using a model created with Python SciKit Learn from [this blog post]() to classify wine based on the description from a wine magazine. We are going to take that model, update it to use a [pipeline]() and export it to an ONNX format. The reason we want to use ONNX format is because this is what will allow us to deploy it to many different platforms. There are many other benefits (such as performance) to using onnx. Learn more about that [here](). Since I ♥ C# we are going to use with the [onnxruntime nuget library]() available for dotnet. However, if you prefer to use a different language many are supported. You can find all supported languages [here]().
+Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! There are many ways to opperationalize your model. In this tutorial we are going to be using a model created with Python and SciKit Learn from [this blog post](https://dev.to/azure/grab-your-wine-it-s-time-to-demystify-ml-and-nlp-47f7) to classify wine quality based on the description from a wine magazine. We are going to take that model, update it to use a [pipeline](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html) and export it to an ONNX format. The reason we want to use ONNX format is because this is what will allow us to deploy it to many different platforms. There are many other benefits (such as performance) to using ONNX. Learn more about that [here](https://onnx.ai/). Since I ♥ C# we are going to use with the [onnxruntime nuget library](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) available for dotnet. However, if you prefer to use a different language many are supported.
 
 ### Prerquesites
 
-- [Create a Free Azure Account!]()
-- [AML Azure Resource]() with a Notebook VM instance created
-  - If you prefer to create the model locally I recommend downloading [Anaconda](). However, this tutorial is written as if you are using AML.
-- [VS Code]()
+- [Create a Free Azure Account!](https://azure.microsoft.com/en-us/free/?WT.mc.id=aiapril-devto-cassieb)
+- [AML Azure Resource](https://docs.microsoft.com/en-us/azure/machine-learning/?WT.mc.id=aiapril-devto-cassieb) with a Notebook VM instance created
+  - If you prefer to create the model locally I recommend downloading [Anaconda](https://www.anaconda.com/). However, this tutorial is written as if you are using AML.
+- [VS Code](https://code.visualstudio.com/download)
 - [.NET core 3.1](https://dotnet.microsoft.com/download)
 
 ### What is Open Neural Network Exchange (ONNX)?
@@ -20,14 +20,25 @@ Build models in the Tensorflow, Keras, PyTorch, scikit-learn, CoreML, and other 
 
 You are full of great questions. The answer is simple: it gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in C#! Say whaaat? Yes, that is right. Save it to ONNX format then run it in csharp with the onnxruntime!
 
-## Create the Model
+## Create the Model with Azure Machine Learning
 
-I have a model from the previous blog post to classify wine quality that we will use as the example model. See the note below if you have your own model you would like to use. Additionaly, you should already have an Azure Machine Learning (AML) Studio created with a Compute resource. If not, follow [these steps]() to create one.
+I have a model from the previous blog post to classify wine quality that we will use as the example model. See the note below if you have your own model you would like to use. Additionally, you should already have an Azure Machine Learning (AML) Studio created. If not, follow [these steps](https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-sdk-setup#create-a-workspace) to create the workspace.
 
 > [!NOTE]
 > To use your own model visit the [ONNX Github tutorials](https://github.com/onnx/tutorials#converting-to-onnx-format) to see how to convert different frameworks and tools.
 
-#### 1. Get Notebook
+#### 1. Create Machine Learning Compute
+
+- Click on the nav "Compute"
+- Click "New"
+- Enter a name for the resource
+- Select "Machine Learning Compute" from the dropdown
+- Select the machine size
+- Enter the min and max nodes (recommend min of 0 and max of 5)
+- Click "Create"
+  ![Create Compute](https://globaleventcdn.blob.core.windows.net/assets/aiml/aiml30/CreateMlCompute.gif)
+
+#### 2. Get the Jupyter Notebook
 
 - Open JupyterLab for the compute instance in AML
 - Click the Terminal to open a terminal tab
@@ -39,7 +50,7 @@ git clone https://github.com/cassieview/onnx-csharp-serverless.git
 
 - The `onnx-csharp-serverless` folder will appear. Navigate to the Jupyter Notebook `onnx-csharp-serverless/notebook/wine-nlp-onnx.ipynb`.
 
-#### 2. Install the package
+#### 3. Install the package
 
 ONNX has different packages for python conversion to the ONNX format. Since we used SciKit Learn we will use the `skl2onnx` package to export our trained model
 
@@ -49,7 +60,7 @@ ONNX has different packages for python conversion to the ONNX format. Since we u
 pip install skl2onnx
 ```
 
-#### 3. Run the code
+#### 4. Run the code
 
 The NLP notebook provided goes over how to create a basic bag-of-words style NLP model. Run each cell until you get to the `Export the Model` step near the bottom of the notebook.
 
@@ -79,11 +90,11 @@ with open("pipeline_quality.onnx", "wb") as f:
     f.write(model_onnx.SerializeToString())
 ```
 
-#### 4. Save Model to Azure Storage
+#### 5. Save Model to Azure Storage
 
 Now that we have exported the model into ONNX format lets save it to Azure Storage.
 
-- Follow [these steps](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal?WT_cassieb) to create a storage account and upload the model created.
+- Follow [these steps](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal?WT.mc.id=aiapril-devto-cassieb) to create a storage account and upload the model created.
 
 ## Deploy Model with Azure Functions
 
@@ -145,8 +156,7 @@ Update the Storage Account connection parameter to your storage account.
 
 # Resources
 
-[ONNX Docs](https://docs.microsoft.com/en-us/azure/machine-learning/concept-onnx)
-
+[ONNX Docs](https://docs.microsoft.com/en-us/azure/machine-learning/concept-onnx?WT.mc.id=aiapril-devto-cassieb)
 [Onnx CSharp API Docs](https://github.com/microsoft/onnxruntime/blob/master/docs/CSharp_API.md)
 [Scikit learn pipeline onnx](http://onnx.ai/sklearn-onnx/auto_examples/plot_tfidfvectorizer.html#l-example-tfidfvectorizer)
-[](https://github.com/Microsoft/onnxruntime)
+[ONNX Runtime Github](https://github.com/Microsoft/onnxruntime)
