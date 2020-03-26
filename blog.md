@@ -4,9 +4,10 @@ Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! Th
 
 ### Prerquesites
 
+- [Create a Free Azure Account!]()
 - [AML Azure Resource]() with a Notebook VM instance created
   - If you prefer to create the model locally I recommend downloading [Anaconda](). However, this tutorial is written as if you are using AML.
-- [VS Code]() with [Azure Functions extension]()
+- [VS Code]()
 - [.NET core 3.1](https://dotnet.microsoft.com/download)
 
 ### What is Open Neural Network Exchange (ONNX)?
@@ -78,45 +79,69 @@ with open("pipeline_quality.onnx", "wb") as f:
     f.write(model_onnx.SerializeToString())
 ```
 
-## Save Model to Azure Storage
+#### 4. Save Model to Azure Storage
 
-Now that we have exported the model into onnx format lets save it to [Azure Storage]().
+Now that we have exported the model into ONNX format lets save it to Azure Storage.
 
-- Go to [Azure Portal](https://portal.azure.com)
+- Follow [these steps](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal?WT_cassieb) to create a storage account and upload the model created.
 
 ## Deploy Model with Azure Functions
 
-### Create Azure Function
+#### 1. Create Azure Function
 
-- crtl shift p
-- search create function
-- select create and ok to the folder
-  -ADD REST OF STEPS HERE
+If you don't already have the Azure Function extension, follow the below steps to install it:
 
-- hit f5 to run project and test that its working
-- if prompted to install \azure-functions-core-tools
-  > node lib/install.js click install
+- Install the Azure Functions extension. You can use the Azure Functions extension to create and test functions and deploy them to Azure.
+- In Visual Studio Code, open Extensions and search for azure functions, or select this [link](vscode:extension/ms-azuretools.vscode-azurefunctions)
+- Select Install to install the extension for Visual Studio Code:
 
-### Install the nuget package
+Once its installed we can now use VS Code to create our function using the command pallet.
 
-onnx runtime
+- Hit `CTRL-SHIFT-P` to openthe command pallet
+- Type `create function` and select the create function option
+- From the popup select `Create new project` and create a folder for the project
+- When prompted for a language select C#. Note that you have many language options with functions!
+- Next select a template. We want an HttpTrigger and give it a name
+- Next it will prompt you for a namespace. I used Wine.Function but feel free to name it as you wish.
+- Access Rights are next, select `Function`
+- Select `open in current window`
+- You should be prompted in the bottom right corner to restore packages. If not you can always open the terminal and run `dotnet restore` to restore nuget packages.
+- Hit `F5` to run project and test that its working
+- Once the function is up there will be a localhost endpoint displayed in the terminal output of VS Code. Paste that into a browser with a query string to test that it is working. The endpoint will look something like this `http://localhost:7071/api/Something?name=test`
+- The result in the browser should look something like this `Hello, test. This HTTP triggered function executed successfully.
+- Stop the run.
+
+#### 2. Install the Nuget ONNX Packages
+
+Sweet, we now have an Azure Function ready to go. Lets install the nuget package we need to inference with our exported model in C#.
+
+Open the terminal and run the below commands
 
 ```dotnetcli
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.2.0
-```
-
-tensor numerics
-
-```dotnetcli
 dotnet add package System.Numerics.Tensors --version 0.1.0
 ```
 
-add the onnx runtime and tensor
+Import the libraries at the top of the csharp class.
 
 ```csharp
 using Microsoft.ML.OnnxRuntime;
 using System.Numerics.Tensors;
 ```
+
+#### 3. Update the Code
+
+Copy and paste the below code into the class you created:
+
+```csharp
+
+```
+
+Update the Storage Account connection parameter to your storage account.
+
+#### 4. Test the endpoint
+
+#### 5. Deploy the Endpoint to Azure
 
 # Resources
 
@@ -125,4 +150,3 @@ using System.Numerics.Tensors;
 [Onnx CSharp API Docs](https://github.com/microsoft/onnxruntime/blob/master/docs/CSharp_API.md)
 [Scikit learn pipeline onnx](http://onnx.ai/sklearn-onnx/auto_examples/plot_tfidfvectorizer.html#l-example-tfidfvectorizer)
 [](https://github.com/Microsoft/onnxruntime)
-""""""""''''''''

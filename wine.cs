@@ -52,16 +52,6 @@ namespace WineNlp.Function
             var result = session.Run(input);
             var stringResult = result.First();
 
-            // var sb = new StringBuilder();
-            // sb.AppendLine("Scores:");
-            // // dump the results
-            // foreach (var r in result)
-            // {
-            //     Console.WriteLine(r);
-            //     sb.AppendLine($"Name: { r.Name}");
-            //     sb.AppendLine($"Value: {r.AsTensor<float>().GetArrayString()}");
-            // }
-
             string responseMessage = string.IsNullOrEmpty(name)
                 ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
                 : $"Hello, {name}. This HTTP triggered function executed successfully.";
