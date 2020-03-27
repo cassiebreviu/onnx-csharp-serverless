@@ -1,6 +1,6 @@
-# ONNX: No, it's not a Pokemon! Deploy your ONNX model with C# and Azure Functions
+# ONNX: No, it's not a Pokemon! Deploy your ONNX model with csharp and Azure Functions
 
-Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! There are many ways to opperationalize your model. In this tutorial we are going to be using a model created with Python and SciKit Learn from [this blog post](https://dev.to/azure/grab-your-wine-it-s-time-to-demystify-ml-and-nlp-47f7) to classify wine quality based on the description from a wine magazine. We are going to take that model, update it to use a [pipeline](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html) and export it to an ONNX format. The reason we want to use ONNX format is because this is what will allow us to deploy it to many different platforms. There are many other benefits (such as performance) to using ONNX. Learn more about that [here](https://onnx.ai/). Since I ♥ C# we are going to use with the [onnxruntime nuget library](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) available for dotnet. However, if you prefer to use a different language many are supported.
+Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! There are many ways to opperationalize your model. In this tutorial we are going to be using a model created with Python and SciKit Learn from [this blog post](https://dev.to/azure/grab-your-wine-it-s-time-to-demystify-ml-and-nlp-47f7) to classify wine quality based on the description from a wine magazine. We are going to take that model, update it to use a [pipeline](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html) and export it to an ONNX format. The reason we want to use ONNX format is because this is what will allow us to deploy it to many different platforms. There are many other benefits (such as performance) to using ONNX. Learn more about that [here](https://onnx.ai/). Since I ♥ csharp we are going to use with the [onnxruntime nuget library](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) available for dotnet. However, if you prefer to use a different language many are supported.
 
 ### Prerquesites
 
@@ -18,7 +18,7 @@ Build models in the Tensorflow, Keras, PyTorch, scikit-learn, CoreML, and other 
 
 ### Why should you use it?
 
-You are full of great questions. The answer is simple: it gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in C#! Say whaaat? Yes, that is right. Save it to ONNX format then run it in csharp with the onnxruntime!
+You are full of great questions. The answer is simple: it gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in csharp! Say whaaat? Yes, that is right. Save it to ONNX format then run it in csharp with the onnxruntime!
 
 ## Create the Model with Azure Machine Learning
 
@@ -108,15 +108,18 @@ If you don't already have the Azure Function extension, follow the below steps t
 
 Once its installed we can now use VS Code to create our function using the command pallet.
 
-- Hit `CTRL-SHIFT-P` to openthe command pallet
+- Hit `CTRL-SHIFT-P` to open the command pallet
 - Type `create function` and select the create function option
 - From the popup select `Create new project` and create a folder for the project
-- When prompted for a language select C#. Note that you have many language options with functions!
+- When prompted for a language select csharp. Note that you have many language options with functions!
 - Next select a template. We want an HttpTrigger and give it a name
 - Next it will prompt you for a namespace. I used Wine.Function but feel free to name it as you wish.
 - Access Rights are next, select `Function`
 - Select `open in current window`
 - You should be prompted in the bottom right corner to restore packages. If not you can always open the terminal and run `dotnet restore` to restore nuget packages.
+
+Run the project to validate its working
+
 - Hit `F5` to run project and test that its working
 - Once the function is up there will be a localhost endpoint displayed in the terminal output of VS Code. Paste that into a browser with a query string to test that it is working. The endpoint will look something like this `http://localhost:7071/api/Something?name=test`
 - The result in the browser should look something like this `Hello, test. This HTTP triggered function executed successfully.
@@ -124,11 +127,11 @@ Once its installed we can now use VS Code to create our function using the comma
 
 #### 2. Install the Nuget ONNX Packages
 
-Sweet, we now have an Azure Function ready to go. Lets install the nuget package we need to inference with our exported model in C#.
+Sweet, we now have an Azure Function ready to go. Lets install the nuget package we need to inference with our exported model in csharp.
 
 Open the terminal and run the below commands
 
-```dotnetcli
+```shell
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.2.0
 dotnet add package System.Numerics.Tensors --version 0.1.0
 ```

@@ -13,6 +13,7 @@ using System.Text;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace WineNlp.Function
 {
@@ -35,28 +36,32 @@ namespace WineNlp.Function
             //TODO: update from storage
             //TODO: add all models types here
             //string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
-            var modelPath = @"C:\Code\onnx-csharp-serverless\pipeline_variety.onnx";
-
+            var modelPath = @"C:\Code\onnx-csharp-serverless\pipeline_quality.onnx";
             // create tensor of string and shape
             var inputTensor = new DenseTensor<string>(new string[] { name }, new int[] { 1, 1 });
 
+
             //create input data for session.
-            var input = new NamedOnnxValue[] { NamedOnnxValue.CreateFromTensor<string>("input", inputTensor) };
+            var input = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor<string>("input", inputTensor) };
 
             Console.WriteLine(input);
-            var session = new InferenceSession(modelPath);
 
-            //create a diction with output names and blank floats
-            //List<string> outputNames = new List<string>(session.InputMetadata.Keys);
+            var session = new InferenceSession(modelPath, options);
 
-            var result = session.Run(input);
-            var stringResult = result.First();
+            var outputProbList = session.Run(input).Last().Value as List<DisposableNamedOnnxValue>;
+            var inferenceResult = outputProbList.First().Value as Dictionary<string, float>;
 
             string responseMessage = string.IsNullOrEmpty(name)
                 ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
                 : $"Hello, {name}. This HTTP triggered function executed successfully.";
 
-            return new OkObjectResult(stringResult);
+            return new JsonResult(inferenceResult);
+        }
+
+        internal static object GetInstanceField(Type type, object instance, string fieldName)
+        {
+            FieldInfo field = type.GetField(fieldName);
+            return field?.GetValue(instance);
         }
     }
 }
