@@ -47,19 +47,26 @@ namespace WineNlp.Function
 
         internal static string GetFileAndPathFromStorage(ExecutionContext context, string containerName, string fileName)
         {
-            //Get model from Azure Blob Storage.
-            var connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
-            var blobServiceClient = new BlobServiceClient(connectionString);
-            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-            var blobClient = containerClient.GetBlobClient(fileName);
+            //Check if file already exists
             var filePath = System.IO.Path.Combine(context.FunctionDirectory, fileName);
+            var fileExists = File.Exists(filePath);
 
-            // Download the blob's contents and save it to a file
-            BlobDownloadInfo blobDownloadInfo = blobClient.Download();
-            using (FileStream downloadFileStream = File.OpenWrite(filePath))
+            if (!fileExists)
             {
-                blobDownloadInfo.Content.CopyTo(downloadFileStream);
-                downloadFileStream.Close();
+                //Get model from Azure Blob Storage.
+                var connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
+                var blobServiceClient = new BlobServiceClient(connectionString);
+                var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                var blobClient = containerClient.GetBlobClient(fileName);
+
+                // Download the blob's contents and save it to a file
+                BlobDownloadInfo blobDownloadInfo = blobClient.Download();
+                using (FileStream downloadFileStream = File.OpenWrite(filePath))
+                {
+                    blobDownloadInfo.Content.CopyTo(downloadFileStream);
+                    downloadFileStream.Close();
+                }
+
             }
 
             return filePath;

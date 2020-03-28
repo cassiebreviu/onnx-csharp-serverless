@@ -192,19 +192,26 @@ Add the helper method to the class below the `Run` method.
 ```csharp
  internal static string GetFileAndPathFromStorage(ExecutionContext context, string containerName, string fileName)
         {
-            //Get model from Azure Blob Storage.
-            var connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
-            var blobServiceClient = new BlobServiceClient(connectionString);
-            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-            var blobClient = containerClient.GetBlobClient(fileName);
+            //Check if file already exists
             var filePath = System.IO.Path.Combine(context.FunctionDirectory, fileName);
+            var fileExists = File.Exists(filePath);
 
-            // Download the blob's contents and save it to a file
-            BlobDownloadInfo blobDownloadInfo = blobClient.Download();
-            using (FileStream downloadFileStream = File.OpenWrite(filePath))
+            if (!fileExists)
             {
-                blobDownloadInfo.Content.CopyTo(downloadFileStream);
-                downloadFileStream.Close();
+                //Get model from Azure Blob Storage.
+                var connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
+                var blobServiceClient = new BlobServiceClient(connectionString);
+                var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                var blobClient = containerClient.GetBlobClient(fileName);
+
+                // Download the blob's contents and save it to a file
+                BlobDownloadInfo blobDownloadInfo = blobClient.Download();
+                using (FileStream downloadFileStream = File.OpenWrite(filePath))
+                {
+                    blobDownloadInfo.Content.CopyTo(downloadFileStream);
+                    downloadFileStream.Close();
+                }
+
             }
 
             return filePath;
@@ -235,11 +242,13 @@ Its time to test the function locally to make sure everything is working correct
 }
 ```
 
-Hit send and you should see inference results.
-It should look list this:
-![postman](\imgs\postman.PNG)
+- Hit send and you should see inference results.
+  It should look list this:
+  ![postman](\imgs\postman.PNG)
 
 #### 5. Deploy the Endpoint to Azure
+
+WOOHOO! We have created our model, the C# Azure Function, and tested it locally with Postman. Lets deploy it! The VS Code Azure Functions extension makes deploying to Azure quite simple. Follow [these steps](https://docs.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code?WT.mc.id=aiapril-devto-cassieb&tabs=csharp#publish-to-azure) to publish the function from VS Code.
 
 # Resources
 
