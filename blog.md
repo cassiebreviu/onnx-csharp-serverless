@@ -133,8 +133,8 @@ Once its installed we can now use VS Code to create our function using the comma
 Run the project to validate its working
 
 - Hit `F5` to run project and test that its working
-- Once the function is up there will be a localhost endpoint displayed in the terminal output of VS Code. Paste that into a browser with a query string to test that it is working. The endpoint will look something like this `http://localhost:7071/api/Something?name=test`
-- The result in the browser should look something like this `Hello, test. This HTTP triggered function executed successfully.
+- Once the function is up there will be a localhost endpoint displayed in the terminal output of VS Code. Paste that into a browser with a query string to test that it is working. The endpoint will look something like this `http://localhost:7071/api/wine?name=test`
+- The result in the browser should look like this `Hello, test. This HTTP triggered function executed successfully.
 - Stop the run.
 
 #### 2. Install the Nuget ONNX Packages
@@ -157,15 +157,87 @@ using System.Numerics.Tensors;
 
 #### 3. Update the Code
 
-Copy and paste the below code into the class you created:
+Copy and paste the below code into the function class created:
 
 ```csharp
+        public static async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            ILogger log, ExecutionContext context)
+        {
+            log.LogInformation("C# HTTP trigger function processed a request.");
 
+            string review = req.Query["review"];
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject(requestBody);
+            review = review ?? data?.review;
+
+            var modelPath = GetFileAndPathFromStorage(context, "model327", "pipeline_quality.onnx");
+            var inputTensor = new DenseTensor<string>(new string[] { review }, new int[] { 1, 1 });
+
+            //create input data for session.
+            var input = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor<string>("input", inputTensor) };
+
+            var session = new InferenceSession(modelPath);
+
+            var output = session.Run(input).ToList().Last().AsEnumerable<NamedOnnxValue>();
+            var inferenceResult = output.First().AsDictionary<string, float>();
+
+            return new JsonResult(inferenceResult);
+        }
 ```
 
-Update the Storage Account connection parameter in the `local.settings.json`to connect to your storage account. You will find the connection string in the created resource in Azure under `Access Keys`
+Add the helper method to the class below the `Run` method.
+
+```csharp
+ internal static string GetFileAndPathFromStorage(ExecutionContext context, string containerName, string fileName)
+        {
+            //Get model from Azure Blob Storage.
+            var connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
+            var blobServiceClient = new BlobServiceClient(connectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+            var blobClient = containerClient.GetBlobClient(fileName);
+            var filePath = System.IO.Path.Combine(context.FunctionDirectory, fileName);
+
+            // Download the blob's contents and save it to a file
+            BlobDownloadInfo blobDownloadInfo = blobClient.Download();
+            using (FileStream downloadFileStream = File.OpenWrite(filePath))
+            {
+                blobDownloadInfo.Content.CopyTo(downloadFileStream);
+                downloadFileStream.Close();
+            }
+
+            return filePath;
+        }
+```
+
+Update the storage parameters
+
+- Update the Storage Account connection in the `local.settings.json` to connect to your storage account. You will find the connection string in the created resource in Azure under `Access Keys`.
+- Update the `containerName` and `fileName` to the names you used.
 
 #### 4. Test the endpoint
+
+Its time to test the function locally to make sure everything is working correctly.
+
+- Hit `F5` to run project and test that its working
+- This time we are going to use an actual wine review from [Wine Enthusiast](https://www.winemag.com/buying-guide/heitz-2014-marthas-vineyard-cabernet-sauvignon-napa-valley/). Rather than doing this through the browser we are going to use [Postman](https://www.postman.com/downloads/).
+- Grab the endpoint from the terminal in vs code and paste it into a new tab in Postman.
+- Change the `GET` dropdown to `POST`
+- Select the `Body` tab
+- Select the `raw` radiobutton
+- check the `text` dropdown to `JSON`
+- Paste the body into the text editor
+
+```json
+{
+  "review": "From the famous Oakville site, this aged wine spends three years in 100% new French oak, one in neutral oak and an additional year in bottle. Though it has had time to evolve, it has years to go to unfurl its core of eucalyptus, mint and cedar. It shows an unmistakable crispness of red fruit, orange peel and stone, all honed by a grippy, generous palate."
+}
+```
+
+Hit send and you should see inference results.
+It should look list this:
+![postman](\imgs\postman.PNG)
 
 #### 5. Deploy the Endpoint to Azure
 

@@ -9,11 +9,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using System.Text;
 using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
@@ -28,22 +25,17 @@ namespace WineNlp.Function
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            string name = req.Query["name"];
+            string review = req.Query["review"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+            review = review ?? data?.review;
 
-            var modelPath = GetFilePathFromStorage(context, "model327", "pipeline_quality.onnx");
-
-            // create tensor of string and shape
-            var inputTensor = new DenseTensor<string>(new string[] { name }, new int[] { 1, 1 });
-
+            var modelPath = GetFileAndPathFromStorage(context, "model327", "pipeline_quality.onnx");
+            var inputTensor = new DenseTensor<string>(new string[] { review }, new int[] { 1, 1 });
 
             //create input data for session.
             var input = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor<string>("input", inputTensor) };
-
-            Console.WriteLine(input);
 
             var session = new InferenceSession(modelPath);
 
@@ -53,7 +45,7 @@ namespace WineNlp.Function
             return new JsonResult(inferenceResult);
         }
 
-        internal static string GetFilePathFromStorage(ExecutionContext context, string containerName, string fileName)
+        internal static string GetFileAndPathFromStorage(ExecutionContext context, string containerName, string fileName)
         {
             //Get model from Azure Blob Storage.
             var connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
@@ -61,8 +53,6 @@ namespace WineNlp.Function
             var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
             var blobClient = containerClient.GetBlobClient(fileName);
             var filePath = System.IO.Path.Combine(context.FunctionDirectory, fileName);
-
-            Console.WriteLine("\nDownloading blob to\n\t{0}\n", filePath);
 
             // Download the blob's contents and save it to a file
             BlobDownloadInfo blobDownloadInfo = blobClient.Download();
