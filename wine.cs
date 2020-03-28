@@ -14,6 +14,8 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 
 namespace WineNlp.Function
 {
@@ -22,7 +24,7 @@ namespace WineNlp.Function
         [FunctionName("wine")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
+            ILogger log, ExecutionContext context)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
@@ -32,11 +34,8 @@ namespace WineNlp.Function
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             name = name ?? data?.name;
 
-            //get from model path
-            //TODO: update from storage
-            //TODO: add all models types here
-            //string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
-            var modelPath = @"C:\Code\onnx-csharp-serverless\pipeline_quality.onnx";
+            var modelPath = GetFilePathFromStorage(context, "model327", "pipeline_quality.onnx");
+
             // create tensor of string and shape
             var inputTensor = new DenseTensor<string>(new string[] { name }, new int[] { 1, 1 });
 
@@ -46,22 +45,34 @@ namespace WineNlp.Function
 
             Console.WriteLine(input);
 
-            var session = new InferenceSession(modelPath, options);
+            var session = new InferenceSession(modelPath);
 
-            var outputProbList = session.Run(input).Last().Value as List<DisposableNamedOnnxValue>;
-            var inferenceResult = outputProbList.First().Value as Dictionary<string, float>;
-
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+            var output = session.Run(input).ToList().Last().AsEnumerable<NamedOnnxValue>();
+            var inferenceResult = output.First().AsDictionary<string, float>();
 
             return new JsonResult(inferenceResult);
         }
 
-        internal static object GetInstanceField(Type type, object instance, string fieldName)
+        internal static string GetFilePathFromStorage(ExecutionContext context, string containerName, string fileName)
         {
-            FieldInfo field = type.GetField(fieldName);
-            return field?.GetValue(instance);
+            //Get model from Azure Blob Storage.
+            var connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
+            var blobServiceClient = new BlobServiceClient(connectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+            var blobClient = containerClient.GetBlobClient(fileName);
+            var filePath = System.IO.Path.Combine(context.FunctionDirectory, fileName);
+
+            Console.WriteLine("\nDownloading blob to\n\t{0}\n", filePath);
+
+            // Download the blob's contents and save it to a file
+            BlobDownloadInfo blobDownloadInfo = blobClient.Download();
+            using (FileStream downloadFileStream = File.OpenWrite(filePath))
+            {
+                blobDownloadInfo.Content.CopyTo(downloadFileStream);
+                downloadFileStream.Close();
+            }
+
+            return filePath;
         }
     }
 }

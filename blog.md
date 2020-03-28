@@ -95,6 +95,18 @@ with open("pipeline_quality.onnx", "wb") as f:
 Now that we have exported the model into ONNX format lets save it to Azure Storage.
 
 - Follow [these steps](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal?WT.mc.id=aiapril-devto-cassieb) to create a storage account and upload the model created.
+- Add the Azure Storage packge with the below command
+
+```shell
+dotnet add package Azure.Storage.Blobs
+```
+
+- Import it to the csharp class
+
+```csharp
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+```
 
 ## Deploy Model with Azure Functions
 
@@ -151,7 +163,7 @@ Copy and paste the below code into the class you created:
 
 ```
 
-Update the Storage Account connection parameter to your storage account.
+Update the Storage Account connection parameter in the `local.settings.json`to connect to your storage account. You will find the connection string in the created resource in Azure under `Access Keys`
 
 #### 4. Test the endpoint
 
