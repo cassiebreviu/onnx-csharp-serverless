@@ -31,18 +31,33 @@ namespace WineNlp.Function
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             review = review ?? data?.review;
 
-            var modelPath = GetFileAndPathFromStorage(context, "model327", "pipeline_quality.onnx");
-            var inputTensor = new DenseTensor<string>(new string[] { review }, new int[] { 1, 1 });
+            var models = new Dictionary<string, string>();
+            models.Add("points", GetFileAndPathFromStorage(context, "model327", "pipeline_points.onnx"));
+            models.Add("price", GetFileAndPathFromStorage(context, "model327", "pipeline_price.onnx"));
+            //models.Add("variety", GetFileAndPathFromStorage(context, "model327", "pipeline_variety.onnx"));
 
+            var inputTensor = new DenseTensor<string>(new string[] { review }, new int[] { 1, 1 });
             //create input data for session.
             var input = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor<string>("input", inputTensor) };
 
-            var session = new InferenceSession(modelPath);
+            //create now object points: result
+            var inferenceResults = new Dictionary<string, IDictionary<Int64, float>>();
 
-            var output = session.Run(input).ToList().Last().AsEnumerable<NamedOnnxValue>();
-            var inferenceResult = output.First().AsDictionary<string, float>();
+            foreach (var model in models)
+            {
+                var session = new InferenceSession(model.Value);
+                var output = session.Run(input).ToList().Last().AsEnumerable<NamedOnnxValue>();
+                var blah = output.First();
+                var inferenceResult = output.First().AsDictionary<Int64, float>();
+                //var inferenceResult = output.First().AsDictionary<string, float>();//s.Value.ToString()
+                var topFiveResult = inferenceResult.OrderByDescending(dict => dict.Value).Take(5)
+                                    .ToDictionary(pair => pair.Key, pair => pair.Value);
+                                    
+                inferenceResults.Add(model.Key, topFiveResult);
+                Console.Write(inferenceResult);
+            }
 
-            return new JsonResult(inferenceResult);
+            return new JsonResult(inferenceResults);
         }
 
         internal static string GetFileAndPathFromStorage(ExecutionContext context, string containerName, string fileName)

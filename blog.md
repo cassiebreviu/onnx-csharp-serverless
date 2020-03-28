@@ -1,6 +1,6 @@
-# ONNX: No, it's not a Pokemon! Deploy your ONNX model with csharp and Azure Functions
+# ONNX: No, it's not a Pokemon! Deploy your ONNX model with C# and Azure Functions
 
-Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! There are many ways to opperationalize your model. In this tutorial we are going to be using a model created with Python and SciKit Learn from [this blog post](https://dev.to/azure/grab-your-wine-it-s-time-to-demystify-ml-and-nlp-47f7) to classify wine quality based on the description from a wine magazine. We are going to take that model, update it to use a [pipeline](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html) and export it to an ONNX format. The reason we want to use ONNX format is because this is what will allow us to deploy it to many different platforms. There are many other benefits (such as performance) to using ONNX. Learn more about that [here](https://onnx.ai/). Since I ♥ csharp we are going to use with the [onnxruntime nuget library](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) available for dotnet. However, if you prefer to use a different language many are supported.
+Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! There are many ways to opperationalize your model. In this tutorial we are going to be using a model created with Python and SciKit Learn from [this blog post](https://dev.to/azure/grab-your-wine-it-s-time-to-demystify-ml-and-nlp-47f7) to classify wine quality based on the description from a wine magazine. We are going to take that model, update it to use a [pipeline](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html) and export it to an ONNX format. The reason we want to use ONNX format is because this is what will allow us to deploy it to many different platforms. There are many other benefits (such as performance) to using ONNX. Learn more about that [here](https://onnx.ai/). Since I ♥ C# we are going to use with the [onnxruntime nuget library](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) available for dotnet. However, if you prefer to use a different language many are supported.
 
 ### Prerquesites
 
@@ -18,7 +18,7 @@ Build models in the Tensorflow, Keras, PyTorch, scikit-learn, CoreML, and other 
 
 ### Why should you use it?
 
-You are full of great questions. The answer is simple: it gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in csharp! Say whaaat? Yes, that is right. Save it to ONNX format then run it in csharp with the onnxruntime!
+You are full of great questions. The answer is simple: it gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in C#! Say whaaat? Yes, that is right. Save it to ONNX format then run it in C# with the onnxruntime!
 
 ## Create the Model with Azure Machine Learning
 
@@ -95,69 +95,70 @@ with open("pipeline_quality.onnx", "wb") as f:
 Now that we have exported the model into ONNX format lets save it to Azure Storage.
 
 - Follow [these steps](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal?WT.mc.id=aiapril-devto-cassieb) to create a storage account and upload the model created.
-- Add the Azure Storage packge with the below command
-
-```shell
-dotnet add package Azure.Storage.Blobs
-```
-
-- Import it to the csharp class
-
-```csharp
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
-```
 
 ## Deploy Model with Azure Functions
 
 #### 1. Create Azure Function
 
-If you don't already have the Azure Function extension, follow the below steps to install it:
+- Install VS Code Azure Function extension:
 
-- Install the Azure Functions extension. You can use the Azure Functions extension to create and test functions and deploy them to Azure.
-- In Visual Studio Code, open Extensions and search for azure functions, or select this [link](vscode:extension/ms-azuretools.vscode-azurefunctions)
-- Select Install to install the extension for Visual Studio Code:
+  - Install the Azure Functions extension. You can use the Azure Functions extension to create and test functions and deploy them to Azure.
+  - In Visual Studio Code, open Extensions and search for azure functions, or select this [link](vscode:extension/ms-azuretools.vscode-azurefunctions)
+  - Select Install to install the extension for Visual Studio Code:
 
-Once its installed we can now use VS Code to create our function using the command pallet.
+- Use VS Code to create our function using the command pallet.
 
-- Hit `CTRL-SHIFT-P` to open the command pallet
-- Type `create function` and select the create function option
-- From the popup select `Create new project` and create a folder for the project
-- When prompted for a language select csharp. Note that you have many language options with functions!
-- Next select a template. We want an HttpTrigger and give it a name
-- Next it will prompt you for a namespace. I used Wine.Function but feel free to name it as you wish.
-- Access Rights are next, select `Function`
-- Select `open in current window`
-- You should be prompted in the bottom right corner to restore packages. If not you can always open the terminal and run `dotnet restore` to restore nuget packages.
+  - Hit `CTRL-SHIFT-P` to open the command pallet
+  - Type `create function` and select the create function option
+  - From the popup select `Create new project` and create a folder for the project
+  - When prompted for a language select C#. Note that you have many language options with functions!
+  - Next select a template. We want an `HttpTrigger` and give it a name
+  - Next it will prompt you for a namespace. I used Wine.Function but feel free to name it as you wish.
+  - Access Rights are next, select `Function`
+  - Select `open in current window`
+  - You should be prompted in the bottom right corner to restore packages. If not you can always open the terminal and run `dotnet restore` to restore nuget packages.
 
-Run the project to validate its working
+- Run the project to validate its working
 
-- Hit `F5` to run project and test that its working
-- Once the function is up there will be a localhost endpoint displayed in the terminal output of VS Code. Paste that into a browser with a query string to test that it is working. The endpoint will look something like this `http://localhost:7071/api/wine?name=test`
-- The result in the browser should look like this `Hello, test. This HTTP triggered function executed successfully.
-- Stop the run.
+  - Hit `F5` to run project and test that its working
+  - Once the function is up there will be a localhost endpoint displayed in the terminal output of VS Code. Paste that into a browser with a query string to test that it is working. The endpoint will look something like this:
 
-#### 2. Install the Nuget ONNX Packages
+  ```
+  http://localhost:7071/api/wine?name=test
+  ```
 
-Sweet, we now have an Azure Function ready to go. Lets install the nuget package we need to inference with our exported model in csharp.
+  - The result in the browser should look like this `Hello, test. This HTTP triggered function executed successfully`.
+  - Stop the run.
 
-Open the terminal and run the below commands
+#### 2. Install the Nuget Packages
+
+Sweet, we now have an Azure Function ready to go. Lets install the nuget package we need to inference with our exported model in C#.
+
+Open the terminal and run the below commands to install the ONNX package
 
 ```shell
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.2.0
 dotnet add package System.Numerics.Tensors --version 0.1.0
 ```
 
-Import the libraries at the top of the csharp class.
+Add the Azure Storage package with the below command
+
+```shell
+dotnet add package Azure.Storage.Blobs
+```
+
+Import the libraries at the top of the C# class.
 
 ```csharp
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.ML.OnnxRuntime;
 using System.Numerics.Tensors;
 ```
 
 #### 3. Update the Code
 
-Copy and paste the below code into the function class created:
+Copy and paste the below code into the class created:
 
 ```csharp
         public static async Task<IActionResult> Run(
@@ -253,6 +254,6 @@ WOOHOO! We have created our model, the C# Azure Function, and tested it locally 
 # Resources
 
 [ONNX Docs](https://docs.microsoft.com/en-us/azure/machine-learning/concept-onnx?WT.mc.id=aiapril-devto-cassieb)
-[Onnx CSharp API Docs](https://github.com/microsoft/onnxruntime/blob/master/docs/CSharp_API.md)
+[Onnx C# API Docs](https://github.com/microsoft/onnxruntime/blob/master/docs/CSharp_API.md)
 [Scikit learn pipeline onnx](http://onnx.ai/sklearn-onnx/auto_examples/plot_tfidfvectorizer.html#l-example-tfidfvectorizer)
 [ONNX Runtime Github](https://github.com/Microsoft/onnxruntime)
