@@ -251,6 +251,15 @@ Its time to test the function locally to make sure everything is working correct
 
 WOOHOO! We have created our model, the C# Azure Function, and tested it locally with Postman. Lets deploy it! The VS Code Azure Functions extension makes deploying to Azure quite simple. Follow [these steps](https://docs.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code?WT.mc.id=aiapril-devto-cassieb&tabs=csharp#publish-to-azure) to publish the function from VS Code.
 
+Once the app is deployed we need update some application settings in the Function App.
+- Navigate to the Function App in Azure Portal
+- Select the name of the Function App you created
+- Select `Configuration`
+- Click `New Application setting` and add the storage connection string name and value.
+- Click `Edit` on `WEBSITE_RUN_FROM_PACKAGE` and change the value to 0. This allows us to write files from our function.
+- Save the changes
+-NOTE: You may have to redeploy your function from VS Code after making this change.
+
 # Resources
 
 [ONNX Docs](https://docs.microsoft.com/en-us/azure/machine-learning/concept-onnx?WT.mc.id=aiapril-devto-cassieb)
