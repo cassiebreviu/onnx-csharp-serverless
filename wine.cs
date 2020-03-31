@@ -49,10 +49,10 @@ namespace WineNlp.Function
                 var session = new InferenceSession(model.Value);
                 var output = session.Run(input).ToList().Last().AsEnumerable<NamedOnnxValue>();
                 var inferenceResult = output.First().AsDictionary<string, float>();
-                var topFiveResult = inferenceResult.OrderByDescending(dict => dict.Value).Take(5)
+                var topThreeResult = inferenceResult.OrderByDescending(dict => dict.Value).Take(3)
                                     .ToDictionary(pair => pair.Key, pair => pair.Value);
-                log.LogInformation($"Top five results for {model.Key} {topFiveResult}");
-                inferenceResults.Add(model.Key, topFiveResult);
+                log.LogInformation($"Top five results for {model.Key} {topThreeResult}");
+                inferenceResults.Add(model.Key, topThreeResult);
                 Console.Write(inferenceResult);
             }
 
