@@ -1,6 +1,6 @@
 # ONNX: No, it's not a Pokemon! Deploy your ONNX model with C# and Azure Functions
 
-Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! There are many ways to opperationalize your model. In this tutorial we are going to be using a model created with Python and SciKit Learn from [this blog post](https://dev.to/azure/grab-your-wine-it-s-time-to-demystify-ml-and-nlp-47f7) to classify wine quality based on the description from a wine magazine. We are going to take that model, update it to use a [pipeline](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html) and export it to an ONNX format. The reason we want to use ONNX format is because this is what will allow us to deploy it to many different platforms. There are many other benefits (such as performance) to using ONNX. Learn more about that [here](https://onnx.ai/). Since I ♥ C# we are going to use with the [onnxruntime nuget library](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) available for dotnet. However, if you prefer to use a different language many are supported.
+Ok you got a ML model working in Jupyter notebook, now what? Lets deploy it! There are many ways to opperationalize your model. In this tutorial we are going to be using a model created with Python and SciKit Learn from [this blog post](https://dev.to/azure/grab-your-wine-it-s-time-to-demystify-ml-and-nlp-47f7) to classify wine quality based on the description from a wine magazine. We are going to take that model, update it to use a [pipeline](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html) and export it to an ONNX format. The reason we want to use ONNX format is because this is what will allow us to deploy it to many different platforms. There are many other benefits (such as performance) to using ONNX. Learn more about that [here](https://onnx.ai/). Since I ♥ C# we are going to use C# and the [onnxruntime nuget library](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/) available for dotnet. However, if you prefer to use a different language many are supported. Checkout all the supported libraries and languages [here](https://github.com/onnx/tutorials)
 
 ### Prerquesites
 
@@ -12,17 +12,31 @@ Ok you got a ML model working in Jupyter notebooks, now what? Lets deploy it! Th
 
 ### What is Open Neural Network Exchange (ONNX)?
 
-Thanks for asking! ONNX is an open/common file format to enable you to use models with a variety of frameworks, tools, runtimes, and compilers. Once the model is exported to the ONNX format then use the ONNX Runtime a cross-platform, high performance scoring engine for ML models.
+ONNX is an open/common file format to enable you to use models with a variety of frameworks, tools, runtimes, and compilers. Once the model is exported to the ONNX format then you can use the ONNX Runtime: a cross-platform, high performance scoring engine for ML models. This provides framework interoperability and helps to maximize the reach of hardware optimization.
 
-Build models in the Tensorflow, Keras, PyTorch, scikit-learn, CoreML, and other popular supported formats can be converted to the standard ONNX format, providing framework interoperability and helping to maximize the reach of hardware optimization.
+Onnx gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in C#! Say whaaat? Yes, that is right. Save it to ONNX format then run it in C# with the onnxruntime!
 
-### Why should you use it?
+<!-- ### Supported Libraries and Languages
 
-You are full of great questions. The answer is simple: it gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in C#! Say whaaat? Yes, that is right. Save it to ONNX format then run it in C# with the onnxruntime!
+#### Libraries supported for converting
+
+| Library       |            |
+| ------------- | :----------|
+| col 3 is      | right-align|
+| col 2 is      |   centered |
+| zebra stripes |   are neat |
+
+#### Languages supported for scoring
+
+| Library       |      Are      |   Cool |
+| ------------- | :-----------: | -----: |
+| col 3 is      | right-aligned | \$1600 |
+| col 2 is      |   centered    |   \$12 |
+| zebra stripes |   are neat    |    \$1 | -->
 
 ## Create the Model with Azure Machine Learning
 
-I have a model from the previous blog post to classify wine quality that we will use as the example model. See the note below if you have your own model you would like to use. Additionally, you should already have an Azure Machine Learning (AML) Studio created. If not, follow [these steps](https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-sdk-setup#create-a-workspace) to create the workspace.
+I have a model from the previous blog post to classify wine quality that we will use as the example model. See the note below if you have your own model you would like to use. Additionally, you should already have an Azure Machine Learning (AML) Studio created to generate the model. If not, follow [these steps](https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-sdk-setup#create-a-workspace) to create the workspace.
 
 > [!NOTE]
 > To use your own model visit the [ONNX Github tutorials](https://github.com/onnx/tutorials#converting-to-onnx-format) to see how to convert different frameworks and tools.
@@ -38,7 +52,7 @@ I have a model from the previous blog post to classify wine quality that we will
 - Click "Create"
   ![Create Compute](https://globaleventcdn.blob.core.windows.net/assets/aiml/aiml30/CreateMlCompute.gif)
 
-#### 2. Get the Jupyter Notebook
+#### 2. Clone the Git repo with the Jupyter Notebook
 
 - Open JupyterLab for the compute instance in AML
 - Click the Terminal to open a terminal tab
@@ -252,13 +266,14 @@ Its time to test the function locally to make sure everything is working correct
 WOOHOO! We have created our model, the C# Azure Function, and tested it locally with Postman. Lets deploy it! The VS Code Azure Functions extension makes deploying to Azure quite simple. Follow [these steps](https://docs.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code?WT.mc.id=aiapril-devto-cassieb&tabs=csharp#publish-to-azure) to publish the function from VS Code.
 
 Once the app is deployed we need update some application settings in the Function App.
+
 - Navigate to the Function App in Azure Portal
 - Select the name of the Function App you created
 - Select `Configuration`
 - Click `New Application setting` and add the storage connection string name and value.
 - Click `Edit` on `WEBSITE_RUN_FROM_PACKAGE` and change the value to 0. This allows us to write files from our function.
 - Save the changes
--NOTE: You may have to redeploy your function from VS Code after making this change.
+  -NOTE: You may have to redeploy your function from VS Code after making this change.
 
 # Resources
 
