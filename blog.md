@@ -6,15 +6,17 @@ Ok you got a ML model working in Jupyter notebook, now what? Lets deploy it! The
 
 - [Create a Free Azure Account!](https://azure.microsoft.com/en-us/free/?WT.mc.id=aiapril-devto-cassieb)
 - [AML Azure Resource](https://docs.microsoft.com/en-us/azure/machine-learning/?WT.mc.id=aiapril-devto-cassieb) with a Notebook VM instance created
-  - If you prefer to create the model locally I recommend downloading [Anaconda](https://www.anaconda.com/). However, this tutorial is written as if you are using AML.
 - [VS Code](https://code.visualstudio.com/download)
 - [.NET core 3.1](https://dotnet.microsoft.com/download)
+
+> [!NOTE]
+> If you prefer to create the model locally I recommend downloading [Anaconda](https://www.anaconda.com/). However, this tutorial is written as if you are using AML.
 
 ### What is Open Neural Network Exchange (ONNX)?
 
 ONNX is an open/common file format to enable you to use models with a variety of frameworks, tools, runtimes, and compilers. Once the model is exported to the ONNX format then you can use the ONNX Runtime: a cross-platform, high performance scoring engine for ML models. This provides framework interoperability and helps to maximize the reach of hardware optimization.
 
-Onnx gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in C#! Say whaaat? Yes, that is right. Save it to ONNX format then run it in C# with the onnxruntime!
+ONNX gives you the ability to use the same model and application code across different platforms. This means I can create this model in Python with SciKit Learn and use the resulting model in C#! Say whaaat? Yes, that is right. Save it to ONNX format then run it in C# with the onnxruntime!
 
 <!-- ### Supported Libraries and Languages
 
@@ -36,7 +38,7 @@ Onnx gives you the ability to use the same model and application code across dif
 
 ## Create the Model with Azure Machine Learning
 
-I have a model from the previous blog post to classify wine quality that we will use as the example model. See the note below if you have your own model you would like to use. Additionally, you should already have an Azure Machine Learning (AML) Studio created to generate the model. If not, follow [these steps](https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-sdk-setup#create-a-workspace) to create the workspace.
+We have a model from the previous blog post to classify wine quality that we will use as the example model. See the note below if you have your own model you would like to use. Additionally, you should already have an Azure Machine Learning (AML) Studio created to generate the model. If not, follow [these steps](https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-sdk-setup#create-a-workspace) to create the workspace.
 
 > [!NOTE]
 > To use your own model visit the [ONNX Github tutorials](https://github.com/onnx/tutorials#converting-to-onnx-format) to see how to convert different frameworks and tools.
@@ -117,8 +119,8 @@ Now that we have exported the model into ONNX format lets save it to Azure Stora
 - Install VS Code Azure Function extension:
 
   - Install the Azure Functions extension. You can use the Azure Functions extension to create and test functions and deploy them to Azure.
-  - In Visual Studio Code, open Extensions and search for azure functions, or select this [link](vscode:extension/ms-azuretools.vscode-azurefunctions)
-  - Select Install to install the extension for Visual Studio Code:
+  - In Visual Studio Code, open Extensions and search for Azure functions, or select this [link](vscode:extension/ms-azuretools.vscode-azurefunctions)
+  - Select `Install` to install the extension for Visual Studio Code:
 
 - Use VS Code to create our function using the command pallet.
 
@@ -172,7 +174,7 @@ using System.Numerics.Tensors;
 
 #### 3. Update the Code
 
-Copy and paste the below code into the class created:
+Copy and paste the below code into the class created. Read through the comments to understand what is happening at each step in the code.
 
 ```csharp
         public static async Task<IActionResult> Run(
@@ -187,22 +189,28 @@ Copy and paste the below code into the class created:
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             review = review ?? data?.review;
 
+            // Get path to model to create inference session.
             var modelPath = GetFileAndPathFromStorage(context, "model327", "pipeline_quality.onnx");
             var inputTensor = new DenseTensor<string>(new string[] { review }, new int[] { 1, 1 });
 
-            //create input data for session.
+            // Create input data for session.
             var input = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor<string>("input", inputTensor) };
 
+            // Create an InferenceSession from the Model Path.
             var session = new InferenceSession(modelPath);
 
+            // Run session and send input data in to get inference output. The run is returned as an object but it is a list. Call ToList then get the Last item. Then use the AsEnumerable extension method to return the Value result as an Enumerable of NamedOnnxValue.
             var output = session.Run(input).ToList().Last().AsEnumerable<NamedOnnxValue>();
+
+            // From the Enumerable output create the inferenceResult by getting the First value and using the AsDictionary extension method of the NamedOnnxValue.
             var inferenceResult = output.First().AsDictionary<string, float>();
 
+            // Return the inference result as json.
             return new JsonResult(inferenceResult);
         }
 ```
 
-Add the helper method to the class below the `Run` method.
+Add the `GetFileAndPathFromStorage` helper method to the class below the `Run` method. This method will download the model from the storage account we created and uploaded the model to.
 
 ```csharp
  internal static string GetFileAndPathFromStorage(ExecutionContext context, string containerName, string fileName)
@@ -271,9 +279,8 @@ Once the app is deployed we need update some application settings in the Functio
 - Select the name of the Function App you created
 - Select `Configuration`
 - Click `New Application setting` and add the storage connection string name and value.
-- Click `Edit` on `WEBSITE_RUN_FROM_PACKAGE` and change the value to 0. This allows us to write files from our function.
+- Click `Edit` on `WEBSITE_RUN_FROM_PACKAGE` and change the value to 0. This allows us to write files from our function. (You may have to redeploy your function from VS Code after making this change.)
 - Save the changes
-  -NOTE: You may have to redeploy your function from VS Code after making this change.
 
 # Resources
 
