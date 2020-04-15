@@ -282,6 +282,10 @@ Once the app is deployed we need update some application settings in the Functio
 - Click `Edit` on `WEBSITE_RUN_FROM_PACKAGE` and change the value to 0. This allows us to write files from our function. (You may have to redeploy your function from VS Code after making this change.)
 - Save the changes
 
+# SommWineGame
+
+I created a game based on these models. Check it out [here](https://SommWineGame.com)
+
 # Resources
 
 [ONNX Docs](https://docs.microsoft.com/en-us/azure/machine-learning/concept-onnx?WT.mc.id=aiapril-devto-cassieb)
